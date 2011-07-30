@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>cassandra_object</groupId>
+  <artifactId>cassandra_object</artifactId>
+  <version>0.0.5</version>
+  <name>cassandra_object</name>
+  <description>ActiveModel Cassandra over Hector for JRuby</description>
+  <scm>
+    <connection>scm:git:git://github.com/jashmenn/cassandra_object.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:jashmenn/cassandra_object.git</developerConnection>
+    <url>https://github.com/jashmenn/cassandra_object</url>
+  </scm>
+  <repositories>
+    <repository>
+      <id>clojars</id>
+      <url>http://clojars.org/repo</url>
+    </repository>
+    <repository>
+      <id>central</id>
+      <url>http://repo1.maven.org/maven2</url>
+    </repository>
+  </repositories>
+  <dependencies>
+    <dependency>
+      <groupId>me.prettyprint</groupId>
+      <artifactId>hector-core</artifactId>
+      <version>0.8.0-2-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>org.slf4j/slf4j-api</artifactId>
+        </exclusion>
+      </exclusions> 
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>1.5.8</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin> <!-- just run `mvn process-sources` -->
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.basedir}/vendor/jars</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
