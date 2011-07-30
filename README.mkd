@@ -1,0 +1,6 @@
+# hector.rb
+
+## Notice: Pre-ALPHA
+
+A fork of the cassandra gem intended for JRuby and backed by Hector
+
