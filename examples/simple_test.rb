@@ -3,15 +3,14 @@ $:.unshift(root + "/lib")
 require 'rubygems'
 require 'java'
 require 'hector'
-require 'simple_uuid'
 
 # gem install cassandra (not a dependency, just an easy way to setup cassandra)
 # cassandra_helper cassandra
 # cassandra_helper data:load
 
 twitter = Hector.new('Twitter')
-#user = {'screen_name' => 'buttonscat'}
-#twitter.insert(:Users, '5', user)
+user = {'screen_name' => 'buttonscat'}
+twitter.insert(:Users, '5', user)
 #pp twitter.get(:Users, '5')
 
 #tweet1 = {'text' => 'Nom nom nom nom nom.', 'user_id' => '5'}

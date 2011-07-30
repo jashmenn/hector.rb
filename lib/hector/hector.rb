@@ -38,10 +38,14 @@ class Hector
 
   attr_reader :keyspace, :cluster, :connection
 
+  def self.cluster(cluster_name, server)
+    HFactory.getOrCreateCluster(cluster_name, CassandraHostConfigurator.new(server))
+  end
+
   # Create a new Hector instance and open the connection.
-  def initialize(keyspace_name, server = "127.0.0.1:9160", options = {})
+  def initialize(keyspace_name, server_or_cluster = "127.0.0.1:9160", options = {})
     cluster_name = options[:cluster_name] || "Hector"
-    @cluster = HFactory.getOrCreateCluster(cluster_name, CassandraHostConfigurator.new(server))
+    @cluster = server_or_cluster.kind_of?(String) ? self.class.cluster(cluster_name, server) : server_or_cluster
     @keyspace = HFactory.createKeyspace(keyspace_name, @cluster)
   end
 
@@ -100,12 +104,8 @@ class Hector
     hash.each do |k,v|
       mut.addInsertion(key, column_family, create_column(k, v, options))
     end
-    #if nested_hash?
-    #else
-    #  mut.addInsertion(key, column_family.to_s, create_column(hash, options))
-    #end
-    mut.execute
 
+    mut.execute
 
     #timestamp = options[:timestamp] || Time.stamp
     #mutation_map = if false #is_super(column_family)
