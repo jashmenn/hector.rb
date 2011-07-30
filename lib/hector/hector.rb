@@ -29,6 +29,12 @@ class Hector
     :reversed => false
   }
 
+  SERIALIZATION_DEFAULTS = {
+    :n_serializer => TypeInferringSerializer.get,
+    :v_serializer => TypeInferringSerializer.get,
+    :s_serializer => TypeInferringSerializer.get
+  }
+
 
   attr_reader :keyspace, :cluster, :connection
 
@@ -41,6 +47,26 @@ class Hector
 
   def shutdown
     HFactory.shutdownCluster(@cluster);
+  end
+
+  def type_inferring
+    TypeInferringSerializer.get
+  end
+
+  def create_column(n, v, opts={})
+    opts = SERIALIZATION_DEFAULTS.merge(opts)
+    pp [n, v, opts]
+    if v.kind_of?(Hash)
+      cols = v.collect {|name,value| create_column(name, value, opts)}
+      HFactory.createSuperColumn(n, cols, opts[:s_serializer], opts[:n_serializer], opts[:v_serializer])
+      # todo
+    #(let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) v)]
+    #  (HFactory/createSuperColumn n cols s-serializer n-serializer v-serializer))
+    else
+      col = HFactory.createColumn(n, v, opts[:n_serializer], opts[:v_serializer])
+      #pp col
+      col
+    end
   end
 
   ##
@@ -62,26 +88,42 @@ class Hector
   #   * :ttl - If specified this is the number of seconds after the insert that this value will be available.
   #
   def insert(column_family, key, hash, options = {})
-    column_family, _, _, options = extract_and_validate_params(column_family, key, [options], WRITE_DEFAULTS)
+    column_family = column_family.to_s
+    #column_family, _, _, options = extract_and_validate_params(column_family, key, [options], WRITE_DEFAULTS)
 
-    timestamp = options[:timestamp] || Time.stamp
-    mutation_map = if false #is_super(column_family)
-      {
-        key => {
-          column_family => "a" #hash.collect{|k,v| _super_insert_mutation(column_family, k, v, timestamp, options[:ttl]) }
-        }
-      }
-    else
-      {
-        key => {
-          column_family => "b" #hash.collect{|k,v| _standard_insert_mutation(column_family, k, v, timestamp, options[:ttl])}
-        }
-      }
+    options = WRITE_DEFAULTS.merge(options)
+
+    #pp [column_family, options]
+
+    type_inferring = nil
+    mut = HFactory.createMutator(@keyspace, self.type_inferring)
+    hash.each do |k,v|
+      mut.addInsertion(key, column_family, create_column(k, v, options))
     end
+    #if nested_hash?
+    #else
+    #  mut.addInsertion(key, column_family.to_s, create_column(hash, options))
+    #end
+    mut.execute
 
+
+    #timestamp = options[:timestamp] || Time.stamp
+    #mutation_map = if false #is_super(column_family)
+    #  {
+    #    key => {
+    #      column_family => "a" #hash.collect{|k,v| _super_insert_mutation(column_family, k, v, timestamp, options[:ttl]) }
+    #    }
+    #  }
+    #else
+    #  {
+    #    key => {
+    #      column_family => "b" #hash.collect{|k,v| _standard_insert_mutation(column_family, k, v, timestamp, options[:ttl])}
+    #    }
+    #  }
+    #end
     # batch TODO
     # @batch ? @batch << [mutation_map, options[:consistency]] : _mutate(mutation_map, options[:consistency])
-    pp mutation_map
+    #pp mutation_map
     #_mutate(mutation_map, options[:consistency])
   end
 end

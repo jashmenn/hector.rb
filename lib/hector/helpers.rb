@@ -1,6 +1,11 @@
 # taken straight out of the cassandra ruby gem
 class Hector
   module Helpers
+
+    def nested_hash?(h)
+      false
+    end
+
     def extract_and_validate_params(column_family, keys, args, options)
       options = options.dup
       column_family = column_family.to_s

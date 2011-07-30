@@ -3,6 +3,9 @@ require 'pp'
 require 'java'
 require "hector/version"
 
+gem 'simple_uuid' , '~> 0.1.0'
+require 'simple_uuid'
+
 here = File.expand_path(File.dirname(__FILE__))
 
 class Hector ; end
