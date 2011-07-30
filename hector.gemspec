@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "hectorb/version"
+require "hector/version"
 
 Gem::Specification.new do |s|
-  s.name        = "hectorb"
-  s.version     = Hectorb::VERSION
+  s.name        = "hector"
+  s.version     = Hector::VERSION
   s.authors     = ["Nate Murray"]
   s.email       = ["nate@natemurray.com"]
   s.homepage    = ""
