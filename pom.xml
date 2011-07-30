@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>cassandra_object</groupId>
-  <artifactId>cassandra_object</artifactId>
-  <version>0.0.5</version>
-  <name>cassandra_object</name>
-  <description>ActiveModel Cassandra over Hector for JRuby</description>
+  <groupId>com.xcombinator</groupId>
+  <artifactId>hectorb</artifactId>
+  <version>0.0.1</version>
+  <name>hectorb</name>
+  <description>JRuby Wrapper for Hector</description>
   <scm>
-    <connection>scm:git:git://github.com/jashmenn/cassandra_object.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:jashmenn/cassandra_object.git</developerConnection>
-    <url>https://github.com/jashmenn/cassandra_object</url>
+    <connection>scm:git:git://github.com/jashmenn/hectorb.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:jashmenn/hectorb.git</developerConnection>
+    <url>https://github.com/jashmenn/hectorb</url>
   </scm>
   <repositories>
     <repository>
