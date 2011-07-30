@@ -10,6 +10,7 @@ import 'me.prettyprint.cassandra.serializers.TypeInferringSerializer'
 
 class Hector
   include Helpers
+  include DDL
 
   class AccessError < StandardError #:nodoc:
   end
@@ -46,10 +47,14 @@ class Hector
   def initialize(keyspace_name, server_or_cluster = "127.0.0.1:9160", options = {})
     cluster_name = options[:cluster_name] || "Hector"
     @cluster = server_or_cluster.kind_of?(String) ? self.class.cluster(cluster_name, server) : server_or_cluster
+    self.keyspace = keyspace_name if keyspace_name
+  end
+
+  def keyspace=(keyspace_name)
     @keyspace = HFactory.createKeyspace(keyspace_name, @cluster)
   end
 
-  def shutdown
+  def disconnect
     HFactory.shutdownCluster(@cluster);
   end
 

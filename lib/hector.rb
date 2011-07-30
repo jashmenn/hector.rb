@@ -19,4 +19,5 @@ end
 require "hector/version"
 require 'hector/helpers'
 require 'hector/time'
+require "hector/ddl"
 require "hector/hector"

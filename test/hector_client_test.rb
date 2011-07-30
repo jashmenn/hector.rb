@@ -4,16 +4,15 @@ class HectorClientTest < Test::Unit::TestCase
   
   def setup
     @cluster = Hector.cluster("Hector", "127.0.0.1:9160")
-    tmp_ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
     cf = "a"
-    Hector.addKeyspace(@cluster, 
-                       {:name => tmp_ks_name, :strategy => :local, 
-                         :replication => 1, :column_families => [{:name => cf}]}) 
-
-    @client = Hector.new('Twitter', @cluster, :retries => 2, :exception_classes => [])
+    @client = Hector.new(nil, @cluster, :retries => 2, :exception_classes => [])
+    @client.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, :column_families => [{:name => cf}]}) 
+    @client.keyspace = @ks_name
   end
 
   def teardown
+    @client.drop_keyspace(@ks_name)
     @client.disconnect
   end
 
