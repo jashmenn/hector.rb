@@ -18,7 +18,7 @@ describe Hector do
     shutdown
   end
 
-  context "ColumnFamily 'a' (with String keys)" do
+  context "ColumnFamily 'a' (with String comparator)" do
 
     before(:each) do
       setup_keyspace_and_client([{:name => @cf="a"}])
@@ -74,9 +74,32 @@ describe Hector do
         @client.get_columns(@cf, "row-key", [1], @opts).should eq( {1 => 1234} )
       end
     end
+
+
+    context "defaults to byte array for name value serialization" do
+      before(:each) do
+        @opts = {:n_serializer => :bytes, :v_serializer => :bytes}
+        @client.put_row(@cf, "row-key", {"k" => "v"})
+      end
+
+      it "should get entire rows" do
+        row = (@client.get_rows(@cf, ["row-key"], @opts))["row-key"]
+        n_bytes = row.to_a.first.first
+        v_bytes = row.to_a.first.last
+        java.lang.String.new(n_bytes).should eq( "k" )
+        java.lang.String.new(v_bytes).should eq( "v" )
+        # @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {1 => 1234}} )
+      end
+
+      pending "should get individual columns" do
+        @client.get_columns(@cf, "row-key", [1], @opts).should eq( {1 => 1234} )
+      end
+    end
+
+
   end
 
-  context "ColumnFamily 'b' (with Long keys)" do
+  context "ColumnFamily 'b' (with Long comparator)" do
 
     before(:each) do
       setup_keyspace_and_client([{:name => @cf="b", :comparator => :long}])
@@ -96,26 +119,25 @@ describe Hector do
         @client.get_columns(@cf, 101, [1], @opts).should eq( {1 => 1234} )
       end
     end
+
+    context "with several long keys & long values" do
+      before(:each) do
+        @opts = {:n_serializer => :long, :v_serializer => :long}
+        @client.put_row(@cf, "row-key", 
+                        { 1 => 101,
+                          2 => 102,
+                          3 => 103,
+                          4 => 104 })
+      end
+
+      it "should get several rows" do
+        opts = @opts.merge({:start => 2, :finish => 3})
+        @client.get_rows(@cf, ["row-key"], opts).should eq( {"row-key" => {2 => 102, 3 => 103}} )
+      end
+
+      pending "should use ordered hashes"
+    end
   end
-
-# (deftest long-key-long-name-and-values
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)
-#         opts [:n-serializer :long
-#               :v-serializer :long]]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf
-#                                                          :comparator :long}]})
-#     (put-row ks cf (long 101) {(long 1) (long 1234)})
-#     (is (= {(long 101) {(long 1)(long 1234)}}
-#            (first (apply get-rows ks cf [(long 101)] opts))))
-#     (is (= {(long 1) (long 1234)}
-#            (apply get-columns ks cf (long 101) [(long 1)] opts)))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
-
 
 # (deftest string-key-long-name-and-values-with-range
 #   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
