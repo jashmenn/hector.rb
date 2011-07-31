@@ -1,21 +1,26 @@
 require 'spec_helper'
 describe Hector do
-  before(:each) do
+
+  def setup_keyspace_and_client(column_families)
     @cluster = Hector.cluster("Hector", "127.0.0.1:9160")
     @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
-    @cf = "a"
     @client = Hector.new(nil, @cluster, :retries => 2, :exception_classes => [])
-    @client.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, :column_families => [{:name => @cf}]}) 
+    @client.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, :column_families => column_families}) 
     @client.keyspace = @ks_name
   end
 
-  after(:each) do
+  def shutdown
     @client.drop_keyspace(@ks_name)
     @client.disconnect
   end
 
+  after(:each) do
+    shutdown
+  end
+
   context "with a string key & string value" do
     before(:each) do
+      setup_keyspace_and_client([{:name => @cf="a"}])
       @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
       @client.put_row(@cf, "row-key", {"k" => "v"})
     end
@@ -35,8 +40,9 @@ describe Hector do
     end
   end
 
-  context "with an string key & long value" do
+  context "with a string key & long value" do
     before(:each) do
+      setup_keyspace_and_client([{:name => @cf="a"}])
       @opts = {:n_serializer => :string, :v_serializer => :long, :s_serializer => :string}
       @client.put_row(@cf, "row-key", {"k" => 1234})
     end
@@ -50,95 +56,22 @@ describe Hector do
     end
   end
 
+  context "with a long key & long value" do
+    before(:each) do
+      setup_keyspace_and_client([{:name => @cf="a"}])
+      @opts = {:n_serializer => :long, :v_serializer => :long, :s_serializer => :string}
+      @client.put_row(@cf, "row-key", {1 => 1234})
+    end
 
-# (deftest string-key-values
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)
-#         opts [:v-serializer :string
-#               :n-serializer :string]]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf}]})
-#     (put-row ks cf "row-key" {"k" "v"})
-#     (is (= '({"row-key" {"k" "v"}})
-#            (apply get-rows ks cf ["row-key"] opts)))
-#     (is (= {"k" "v"}
-#            (apply get-columns ks cf "row-key" ["k"] opts)))
-#     (delete-columns ks cf "row-key" ["k"])
-#     (is (= '({"row-key" {}})
-#            (apply get-rows ks cf ["row-key"] opts)))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
+    it "should get entire rows" do
+      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {1 => 1234}} )
+    end
 
- 
-  
-  def test_client_method_is_called
-    # assert_nil @twitter.instance_variable_get(:@client)
-    # @twitter.insert(:Statuses, key, {'1' => 'v', '2' => 'v', '3' => 'v'})
-    # assert_not_nil @twitter.instance_variable_get(:@client)
+    it "should get individual columns" do
+      @client.get_columns(@cf, "row-key", [1], @opts).should eq( {1 => 1234} )
+    end
   end
-  
-  #def key
-  #  caller.first[/`(.*?)'/, 1]
-  #end
 
-# (def *test-cluster* (cluster "test" "localhost"))
-
-# (deftest string-key-values
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)
-#         opts [:v-serializer :string
-#               :n-serializer :string]]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf}]})
-#     (put-row ks cf "row-key" {"k" "v"})
-#     (is (= '({"row-key" {"k" "v"}})
-#            (apply get-rows ks cf ["row-key"] opts)))
-#     (is (= {"k" "v"}
-#            (apply get-columns ks cf "row-key" ["k"] opts)))
-#     (delete-columns ks cf "row-key" ["k"])
-#     (is (= '({"row-key" {}})
-#            (apply get-rows ks cf ["row-key"] opts)))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
-
-# (deftest string-name-int-values
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)
-#         opts [:v-serializer :integer
-#               :n-serializer :string]]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf}]})
-#     (put-row ks cf "row-key" {"k" 1234})
-#     (is (= '({"row-key" {"k" 1234}})
-#            (apply get-rows ks cf ["row-key"] opts)))
-#     (is (= {"k" 1234}
-#            (apply get-columns ks cf "row-key" ["k"] opts)))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
-
-# (deftest string-key-long-name-and-values
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)
-#         opts [:n-serializer :long
-#               :v-serializer :long]]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf
-#                                                          :comparator :long}]})
-#     (put-row ks cf "row-key" {(long 1) (long 1234)})
-#     (is (= {"row-key" {(long 1) (long 1234)}}
-#            (first (apply get-rows ks cf ["row-key"] opts))))
-#     (is (= {(long 1) (long 1234)}
-#            (apply get-columns ks cf "row-key" [(long 1)] opts)))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 # (deftest long-key-long-name-and-values
 #   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
