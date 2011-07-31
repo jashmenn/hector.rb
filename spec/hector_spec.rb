@@ -24,7 +24,7 @@ describe Hector do
       @client.get_rows(@cf, ["row-key"], @sopts).should eq( {"row-key" => {'k' => 'v'}} )
     end
 
-    pending "should get individual columns with string key attributes" do
+    it "should get individual columns with string key attributes" do
       @client.get_columns(@cf, "row-key", ["k"], @sopts).should eq( {'k' => 'v'} )
     end
 

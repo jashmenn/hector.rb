@@ -30,7 +30,7 @@ class Hector
   }
 
   READ_DEFAULTS = {
-    :k_serializer => :bytes,
+    :k_serializer => :infer,
     :n_serializer => :bytes,
     :v_serializer => :bytes,
     :s_serializer => :bytes, 
@@ -153,6 +153,22 @@ class Hector
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
     end
     execute_query(query)
+  end
+
+  def get_columns(column_family, pk, columns, options = {}) 
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    ks = serializer(options[:k_serializer])
+    ns = serializer(options[:n_serializer])
+    vs = serializer(options[:v_serializer])
+    if columns.size < 2
+      query = returning HFactory.createColumnQuery(@keyspace, ks, ns, vs) do |q|
+        q.setColumnFamily(column_family)
+        q.setKey(pk)
+        q.setName(columns.first)
+      end
+      execute_query(query)
+    else
+    end
   end
 
   def execute_query(q)

@@ -1,5 +1,6 @@
 class Hector
   module Serialize
+
     include_package 'me.prettyprint.cassandra.serializers'
     include_package 'me.prettyprint.cassandra.model'
 
@@ -31,7 +32,7 @@ class Hector
     end
 
     def h_to_rb(s)
-      pp [:h_to_rb, s, s.class, s.class == QueryResultImpl]
+      #pp [:h_to_rb, s, s.class, s.class == QueryResultImpl]
       case s
       #when SuperRowsImpl
         #(to-clojure [s]
@@ -44,18 +45,10 @@ class Hector
         #            {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
       when RowsImpl
         s.inject({}) {|acc, x| acc.merge(h_to_rb(x)) }
-
-        #(to-clojure [s]
-        #            (map to-clojure (iterator-seq (.iterator s))))
       when RowImpl
         {s.getKey => h_to_rb(s.getColumnSlice)}
-        #(to-clojure [s]
-        #            {(.getKey s) (to-clojure (.getColumnSlice s))})
       when ColumnSliceImpl
-        #s.getColumns.collect{|c| pp [:slice, c]; h_to_rb(c)}
         s.getColumns.inject({}) {|acc, x| acc.merge(h_to_rb(x)) }
-        #(to-clojure [s]
-        #            (into (hash-map) (for [c (.getColumns s)] (to-clojure c))))
       when HColumnImpl
         {s.getName => s.getValue}
         #(to-clojure [s]
@@ -64,12 +57,9 @@ class Hector
         #(to-clojure [s]
         #            {:count s})
       when QueryResultImpl
-        pp ["query reqult"]
-        pp s.get
         h_to_rb(s.get) # {:exec_us (.getExecutionTimeMicro s) #                                              :host (.getHostUsed s)})
       else
         pp ["NONE", s.class, s]
-
       end
     end
   end
