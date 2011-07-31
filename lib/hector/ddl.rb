@@ -55,7 +55,6 @@ class Hector
       @cluster.dropKeyspace keyspace
     end
 
-
   end
 end
 

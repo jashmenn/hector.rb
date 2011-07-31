@@ -1,27 +1,38 @@
-require File.expand_path(File.dirname(__FILE__) + '/test_helper')
-
-class HectorClientTest < Test::Unit::TestCase
-  
-  def setup
+require 'spec_helper'
+describe Hector do
+  before(:each) do
     @cluster = Hector.cluster("Hector", "127.0.0.1:9160")
     @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
     @cf = "a"
     @client = Hector.new(nil, @cluster, :retries => 2, :exception_classes => [])
     @client.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, :column_families => [{:name => @cf}]}) 
     @client.keyspace = @ks_name
+    @sopts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
   end
 
-  def teardown
+  after(:each) do
     @client.drop_keyspace(@ks_name)
     @client.disconnect
   end
 
-#  def test_string_key_values
-#    opts = {:n_serializer => :string, :v_serializer => :string}
-#    @client.put_row(@cf, "row-key", {"k" => "v"} )
-#    assert_equal({"row-key" => {'k' => 'v'}}, @client.get_rows(@cf, ["row-key"], opts))
-#    assert_equal()
-#  end
+  context "with a basic row" do
+    before(:each) do
+      @client.put_row(@cf, "row-key", {"k" => "v"})
+    end
+
+    it "should get entire rows with string key attributes" do
+      @client.get_rows(@cf, ["row-key"], @sopts).should eq( {"row-key" => {'k' => 'v'}} )
+    end
+
+    it "should get individual columns with string key attributes" do
+      @client.get_columns(@cf, "row-key", ["k"], @sopts).should eq( {'k' => 'v'} )
+    end
+
+    it "should be empty if we've deleted the column" do
+      @client.delete_columns(@cf, "row-key", ["k"])
+      @client.get_rows(@cf, ["row-key"], @sopts).should eq( {"row-key" => {}} )
+    end
+  end
 
 # (deftest string-key-values
 #   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")

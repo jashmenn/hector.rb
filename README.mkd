@@ -2,5 +2,13 @@
 
 ## Notice: Pre-ALPHA
 
-A fork of the cassandra gem intended for JRuby and backed by Hector
+A library for using Hector via JRuby.
+
+## History
+
+This gem started as a fork of the `cassandra` gem. However it has
+come to look more like `clj-hector` in terms of the API.
+
+We may make this gem API compatible with the `cassandra` gem in
+the future.
 
