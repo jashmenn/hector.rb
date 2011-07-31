@@ -17,8 +17,10 @@ Dir.entries(jars_dir).sort.each do |entry|
 end
 
 require "hector/version"
+require 'hector/extensions'
 require 'hector/helpers'
 require 'hector/ordered_hash'
 require 'hector/time'
 require "hector/ddl"
+require "hector/serialize"
 require "hector/hector"
