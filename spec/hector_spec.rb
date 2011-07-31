@@ -18,60 +18,85 @@ describe Hector do
     shutdown
   end
 
-  context "with a string key & string value" do
+  context "ColumnFamily 'a' (with String keys)" do
+
     before(:each) do
       setup_keyspace_and_client([{:name => @cf="a"}])
-      @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
-      @client.put_row(@cf, "row-key", {"k" => "v"})
     end
 
-    it "should get entire rows" do
-      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 'v'}} )
+    context "with a string key & string value" do
+      before(:each) do
+        @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
+        @client.put_row(@cf, "row-key", {"k" => "v"})
+      end
+
+      it "should get entire rows" do
+        @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 'v'}} )
+      end
+
+      it "should get individual columns" do
+        @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 'v'} )
+      end
+      pending "should get multiple columns with string key attribute"
+
+      it "should be empty if we've deleted the column" do
+        @client.delete_columns(@cf, "row-key", ["k"])
+        @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {}} )
+      end
     end
 
-    it "should get individual columns" do
-      @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 'v'} )
-    end
-    pending "should get multiple columns with string key attribute"
+    context "with a string key & long value" do
+      before(:each) do
+        @opts = {:n_serializer => :string, :v_serializer => :long, :s_serializer => :string}
+        @client.put_row(@cf, "row-key", {"k" => 1234})
+      end
 
-    it "should be empty if we've deleted the column" do
-      @client.delete_columns(@cf, "row-key", ["k"])
-      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {}} )
+      it "should get entire rows" do
+        @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 1234}} )
+      end
+
+      it "should get individual columns" do
+        @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 1234} )
+      end
+    end
+
+    context "with a long key & long value" do
+      before(:each) do
+        @opts = {:n_serializer => :long, :v_serializer => :long, :s_serializer => :string}
+        @client.put_row(@cf, "row-key", {1 => 1234})
+      end
+
+      it "should get entire rows" do
+        @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {1 => 1234}} )
+      end
+
+      it "should get individual columns" do
+        @client.get_columns(@cf, "row-key", [1], @opts).should eq( {1 => 1234} )
+      end
     end
   end
 
-  context "with a string key & long value" do
+  context "ColumnFamily 'b' (with Long keys)" do
+
     before(:each) do
-      setup_keyspace_and_client([{:name => @cf="a"}])
-      @opts = {:n_serializer => :string, :v_serializer => :long, :s_serializer => :string}
-      @client.put_row(@cf, "row-key", {"k" => 1234})
+      setup_keyspace_and_client([{:name => @cf="b", :comparator => :long}])
     end
 
-    it "should get entire rows" do
-      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 1234}} )
-    end
+    context "with a long key & long value" do
+      before(:each) do
+        @opts = {:n_serializer => :long, :v_serializer => :long}
+        @client.put_row(@cf, 101, {1 => 1234})
+      end
 
-    it "should get individual columns" do
-      @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 1234} )
+      it "should get entire rows" do
+        @client.get_rows(@cf, [101], @opts).should eq( {101 => {1 => 1234}} )
+      end
+
+      it "should get individual columns" do
+        @client.get_columns(@cf, 101, [1], @opts).should eq( {1 => 1234} )
+      end
     end
   end
-
-  context "with a long key & long value" do
-    before(:each) do
-      setup_keyspace_and_client([{:name => @cf="a"}])
-      @opts = {:n_serializer => :long, :v_serializer => :long, :s_serializer => :string}
-      @client.put_row(@cf, "row-key", {1 => 1234})
-    end
-
-    it "should get entire rows" do
-      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {1 => 1234}} )
-    end
-
-    it "should get individual columns" do
-      @client.get_columns(@cf, "row-key", [1], @opts).should eq( {1 => 1234} )
-    end
-  end
-
 
 # (deftest long-key-long-name-and-values
 #   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")

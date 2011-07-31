@@ -25,14 +25,13 @@ class Hector
                             comparator_type
                           else
                             case comparator_type
-                            when 
-                              :ascii;         ComparatorType.ASCIITYPE
-                              :byte;          ComparatorType.BYTESTYPE
-                              :integer;       ComparatorType.INTEGERTYPE
-                              :lexical_uuid;  ComparatorType.LEXICALUUIDTYPE
-                              :long;          ComparatorType.LONGTYPE
-                              :time_uuid;     ComparatorType.TIMEUUIDTYPE
-                              :utf8;         ComparatorType.UTF8TYPE
+                            when :ascii         then ComparatorType.ASCIITYPE
+                            when :byte          then ComparatorType.BYTESTYPE
+                            when :integer       then ComparatorType.INTEGERTYPE
+                            when :lexical_uuid  then ComparatorType.LEXICALUUIDTYPE
+                            when :long          then ComparatorType.LONGTYPE
+                            when :time_uuid     then ComparatorType.TIMEUUIDTYPE
+                            when :utf8          then ComparatorType.UTF8TYPE
                             else raise "Unknown comparator type passed in column family definition"
                             end
                           end
