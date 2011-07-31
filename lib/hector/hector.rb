@@ -171,6 +171,15 @@ class Hector
     end
   end
 
+  def delete_columns(column_family, pk, columns, options = {})
+    column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
+    (returning(HFactory.createMutator(@keyspace, serializer(options[:k_serializer]))) { |m|
+       columns.map {|column|
+         m.addDeletion pk, column_family, column, serializer(options[:n_serializer])
+       }
+     }).execute
+  end
+
   def execute_query(q)
     h_to_rb(q.execute)
   end

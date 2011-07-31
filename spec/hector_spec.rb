@@ -27,11 +27,13 @@ describe Hector do
     it "should get individual columns with string key attributes" do
       @client.get_columns(@cf, "row-key", ["k"], @sopts).should eq( {'k' => 'v'} )
     end
+    pending "should get multiple columns with string key attribute"
 
-    pending "should be empty if we've deleted the column" do
+    it "should be empty if we've deleted the column" do
       @client.delete_columns(@cf, "row-key", ["k"])
       @client.get_rows(@cf, ["row-key"], @sopts).should eq( {"row-key" => {}} )
     end
+
   end
 
 # (deftest string-key-values
