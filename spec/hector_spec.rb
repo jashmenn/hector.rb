@@ -33,12 +33,11 @@ describe Hector do
       @client.delete_columns(@cf, "row-key", ["k"])
       @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {}} )
     end
-
   end
 
-  pending "with an string key & int value" do
+  context "with an string key & long value" do
     before(:each) do
-      @opts = {:n_serializer => :string, :v_serializer => :infer, :s_serializer => :string}
+      @opts = {:n_serializer => :string, :v_serializer => :long, :s_serializer => :string}
       @client.put_row(@cf, "row-key", {"k" => 1234})
     end
 
@@ -49,7 +48,6 @@ describe Hector do
     it "should get individual columns" do
       @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 1234} )
     end
-
   end
 
 
