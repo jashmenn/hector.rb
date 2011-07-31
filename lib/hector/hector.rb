@@ -65,20 +65,20 @@ class Hector
   # note, how we're giving every column the same seralizer
   # here. TODO have more advanced options where we can specify
   # per-name column serialization
-  def create_column(n, v, opts={})
-    opts = SERIALIZATION_DEFAULTS.merge(opts)
+  def create_column(n, v, options = {})
+    ks, ss, ns, vs = *seropts(options)
     if v.kind_of?(Hash)
-      cols = v.collect {|name,value| create_column(name, value, opts)}
-      HFactory.createSuperColumn(n, cols, serializer(opts[:s_serializer]), 
-                                 serializer(opts[:n_serializer]), serializer(opts[:v_serializer]))
+      cols = v.collect {|name,value| create_column(name, value, options)}
+      HFactory.createSuperColumn(n, cols, ss, ns, vs)
     else
-      HFactory.createColumn(n, v, serializer(opts[:n_serializer]), serializer(opts[:v_serializer]))
+      HFactory.createColumn(n, v, ns, vs)
     end
   end
 
   def put_row(column_family, key, hash, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
-    mut = HFactory.createMutator(@keyspace, serializer(options[:k_serializer]))
+    ks, _, _, _ = *seropts(options)
+    mut = HFactory.createMutator(@keyspace, ks)
     hash.each do |k,v|
       mut.addInsertion(key, column_family, create_column(k, v, options))
     end
@@ -87,10 +87,8 @@ class Hector
 
   def get_rows(column_family, pks, options = {})
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
-    query = returning HFactory.createMultigetSliceQuery(@keyspace,
-                                              serializer(pks.first),
-                                              serializer(options[:n_serializer]),
-                                              serializer(options[:v_serializer])) do |q|
+    ks, ss, ns, vs = *seropts(options)
+    query = returning HFactory.createMultigetSliceQuery(@keyspace, serializer(pks.first), ns, vs) do |q|
       q.setColumnFamily(column_family)
       q.setKeys(pks.to_java(:object))
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
@@ -100,9 +98,7 @@ class Hector
 
   def get_columns(column_family, pk, columns, options = {}) 
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
-    ks = serializer(options[:k_serializer])
-    ns = serializer(options[:n_serializer])
-    vs = serializer(options[:v_serializer])
+    ks, _, ns, vs = *seropts(options)
     if columns.size < 2
       query = returning HFactory.createColumnQuery(@keyspace, ks, ns, vs) do |q|
         q.setColumnFamily(column_family)
@@ -116,9 +112,10 @@ class Hector
 
   def delete_columns(column_family, pk, columns, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
-    mut = returning HFactory.createMutator(@keyspace, serializer(options[:k_serializer])) do |m|
+    ks, _, ns, _ = *seropts(options)
+    mut = returning HFactory.createMutator(@keyspace, ks) do |m|
       columns.map do |column|
-        m.addDeletion pk, column_family, column, serializer(options[:n_serializer])
+        m.addDeletion pk, column_family, column, ns 
       end 
     end
     mut.execute
@@ -126,5 +123,16 @@ class Hector
 
   def execute_query(q)
     h_to_rb(q.execute)
+  end
+
+  private
+
+  # e.g.
+  # ks, ss, ns, vs = *seropts(options)
+  def seropts(opts)
+    [serializer(opts[:k_serializer]),
+     serializer(opts[:s_serializer]),
+     serializer(opts[:n_serializer]),
+     serializer(opts[:v_serializer])]
   end
 end

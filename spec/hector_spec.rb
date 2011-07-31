@@ -36,7 +36,7 @@ describe Hector do
 
   end
 
-  context "with an string key & int value" do
+  pending "with an string key & int value" do
     before(:each) do
       @opts = {:n_serializer => :string, :v_serializer => :infer, :s_serializer => :string}
       @client.put_row(@cf, "row-key", {"k" => 1234})
