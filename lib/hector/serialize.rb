@@ -42,16 +42,22 @@ class Hector
       #when HSuperColumnImpl
         #(to-clojure [s]
         #            {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
-      #when RowsImpl
+      when RowsImpl
+        s.inject({}) {|acc, x| acc.merge(h_to_rb(x)) }
+
         #(to-clojure [s]
         #            (map to-clojure (iterator-seq (.iterator s))))
-      #when RowImpl
+      when RowImpl
+        {s.getKey => h_to_rb(s.getColumnSlice)}
         #(to-clojure [s]
         #            {(.getKey s) (to-clojure (.getColumnSlice s))})
-      #when ColumnSliceImpl
+      when ColumnSliceImpl
+        #s.getColumns.collect{|c| pp [:slice, c]; h_to_rb(c)}
+        s.getColumns.inject({}) {|acc, x| acc.merge(h_to_rb(x)) }
         #(to-clojure [s]
         #            (into (hash-map) (for [c (.getColumns s)] (to-clojure c))))
-      #when HColumnImpl
+      when HColumnImpl
+        {s.getName => s.getValue}
         #(to-clojure [s]
         #            {(.getName s) (.getValue s)})
       #when Integer
@@ -62,7 +68,7 @@ class Hector
         pp s.get
         h_to_rb(s.get) # {:exec_us (.getExecutionTimeMicro s) #                                              :host (.getHostUsed s)})
       else
-        pp ["NONE"]
+        pp ["NONE", s.class, s]
 
       end
     end
