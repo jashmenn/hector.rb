@@ -41,11 +41,6 @@ class Hector
     #:consistency => Consistency::ONE,
   }
 
-  SERIALIZATION_DEFAULTS = {
-
-  }
-
-
   attr_reader :keyspace, :cluster, :connection
 
   def self.cluster(cluster_name, server)
@@ -81,64 +76,12 @@ class Hector
     end
   end
 
-  ##
-  # This is the main method used to insert rows into cassandra. If the
-  # column\_family that you are inserting into is a SuperColumnFamily then
-  # the hash passed in should be a nested hash, otherwise it should be a
-  # flat hash.
-  #
-  # This method can also be called while in batch mode. If in batch mode
-  # then we queue up the mutations (an insert in this case) and pass them to
-  # cassandra in a single batch at the end of the block.
-  #
-  # * column\_family - The column\_family that you are inserting into.
-  # * key - The row key to insert.
-  # * hash - The columns or super columns to insert.
-  # * options - Valid options are:
-  #   * :timestamp - Uses the current time if none specified.
-  #   * :consistency - Uses the default write consistency if none specified.
-  #   * :ttl - If specified this is the number of seconds after the insert that this value will be available.
-  #
-  def insert(column_family, key, hash, options = {})
-    column_family = column_family.to_s
-    options = WRITE_DEFAULTS.merge(options)
-
-    type_inferring = nil
-    mut = HFactory.createMutator(@keyspace, self.type_inferring)
-    hash.each do |k,v|
-      mut.addInsertion(key, column_family, create_column(k, v, options))
-    end
-
-    mut.execute
-
-    #timestamp = options[:timestamp] || Time.stamp
-    #mutation_map = if false #is_super(column_family)
-    #  {
-    #    key => {
-    #      column_family => "a" #hash.collect{|k,v| _super_insert_mutation(column_family, k, v, timestamp, options[:ttl]) }
-    #    }
-    #  }
-    #else
-    #  {
-    #    key => {
-    #      column_family => "b" #hash.collect{|k,v| _standard_insert_mutation(column_family, k, v, timestamp, options[:ttl])}
-    #    }
-    #  }
-    #end
-    # batch TODO
-    # @batch ? @batch << [mutation_map, options[:consistency]] : _mutate(mutation_map, options[:consistency])
-    #pp mutation_map
-    #_mutate(mutation_map, options[:consistency])
-  end
-
   def put_row(column_family, key, hash, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
-
     mut = HFactory.createMutator(@keyspace, serializer(options[:k_serializer]))
     hash.each do |k,v|
       mut.addInsertion(key, column_family, create_column(k, v, options))
     end
-
     mut.execute
   end
 
@@ -173,11 +116,12 @@ class Hector
 
   def delete_columns(column_family, pk, columns, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
-    (returning(HFactory.createMutator(@keyspace, serializer(options[:k_serializer]))) { |m|
-       columns.map {|column|
-         m.addDeletion pk, column_family, column, serializer(options[:n_serializer])
-       }
-     }).execute
+    mut = returning HFactory.createMutator(@keyspace, serializer(options[:k_serializer])) do |m|
+      columns.map do |column|
+        m.addDeletion pk, column_family, column, serializer(options[:n_serializer])
+      end 
+    end
+    mut.execute
   end
 
   def execute_query(q)

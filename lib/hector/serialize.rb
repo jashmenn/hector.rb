@@ -44,16 +44,24 @@ class Hector
         #(to-clojure [s]
         #            {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
       when RowsImpl
-        s.inject({}) {|acc, x| acc.merge(h_to_rb(x)) }
+        s.inject({}) {|acc, x| 
+          #pp x
+          acc.merge(h_to_rb(x)) 
+        }
       when RowImpl
         {s.getKey => h_to_rb(s.getColumnSlice)}
       when ColumnSliceImpl
-        s.getColumns.inject({}) {|acc, x| acc.merge(h_to_rb(x)) }
+        s.getColumns.inject({}) {|acc, x| 
+          #pp x
+          acc.merge(h_to_rb(x)) 
+        }
       when HColumnImpl
+        ## pp [s.getNameSerializer, s.getValueSerializer]
         {s.getName => s.getValue}
         #(to-clojure [s]
         #            {(.getName s) (.getValue s)})
-      #when Integer
+      # when Integer
+        # {:count s}
         #(to-clojure [s]
         #            {:count s})
       when QueryResultImpl

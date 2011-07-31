@@ -7,7 +7,6 @@ describe Hector do
     @client = Hector.new(nil, @cluster, :retries => 2, :exception_classes => [])
     @client.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, :column_families => [{:name => @cf}]}) 
     @client.keyspace = @ks_name
-    @sopts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
   end
 
   after(:each) do
@@ -15,26 +14,44 @@ describe Hector do
     @client.disconnect
   end
 
-  context "with a basic row" do
+  context "with a string key & string value" do
     before(:each) do
+      @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
       @client.put_row(@cf, "row-key", {"k" => "v"})
     end
 
-    it "should get entire rows with string key attributes" do
-      @client.get_rows(@cf, ["row-key"], @sopts).should eq( {"row-key" => {'k' => 'v'}} )
+    it "should get entire rows" do
+      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 'v'}} )
     end
 
-    it "should get individual columns with string key attributes" do
-      @client.get_columns(@cf, "row-key", ["k"], @sopts).should eq( {'k' => 'v'} )
+    it "should get individual columns" do
+      @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 'v'} )
     end
     pending "should get multiple columns with string key attribute"
 
     it "should be empty if we've deleted the column" do
       @client.delete_columns(@cf, "row-key", ["k"])
-      @client.get_rows(@cf, ["row-key"], @sopts).should eq( {"row-key" => {}} )
+      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {}} )
     end
 
   end
+
+  context "with an string key & int value" do
+    before(:each) do
+      @opts = {:n_serializer => :string, :v_serializer => :infer, :s_serializer => :string}
+      @client.put_row(@cf, "row-key", {"k" => 1234})
+    end
+
+    it "should get entire rows" do
+      @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 1234}} )
+    end
+
+    it "should get individual columns" do
+      @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 1234} )
+    end
+
+  end
+
 
 # (deftest string-key-values
 #   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
