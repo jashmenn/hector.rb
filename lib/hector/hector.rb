@@ -166,6 +166,20 @@ class Hector
     execute_query(query)
   end
 
+  def delete_super_columns(column_family, columns, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    ks, ss, ns, vs = *seropts(options)
+    mut = returning HFactory.createMutator(@keyspace, ks) do |m|
+      columns.map do |k, nv|
+        nv.map do |sc_name, v|
+          column = create_column(sc_name, v.inject({}){|acc,e| acc.merge({e => e})}, options) 
+          m.addSubDelete k, column_family, column
+        end
+      end 
+    end
+    mut.execute
+  end
+ 
 
   private
 

@@ -182,9 +182,17 @@ describe Hector do
       end
 
       it "should get super columns" do
-        fail # huh whats going on here
-        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2", "k2"], @opts).should  # k2 k2?
+        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k"], @opts).should eq( {"k" => "v"} )
+        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2"], @opts).should eq( {"k2" => "v2"} )
+        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2"], @opts).should_not eq( {"k2" => "XXX"} )
+        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k", "k2"], @opts).should
           eq( {"k" => "v", "k2" => "v2"} )
+      end
+
+      it "should delete super columns" do
+        @client.delete_super_columns(@cf, {"row-key" => {"SuperCol" => ["k2"], "SuperCol2" => ["k2"]}}, @opts)
+        @client.get_super_columns(@cf, "row-key", "SuperCol",  ["k", "k2"], @opts).should eq( {"k" => "v"} )
+        @client.get_super_columns(@cf, "row-key", "SuperCol2", ["k", "k2"], @opts).should eq( {"k" => "v"} )
       end
 
 
