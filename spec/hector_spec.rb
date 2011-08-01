@@ -182,9 +182,14 @@ describe Hector do
       end
 
       it "should get super columns" do
-        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2", "v2"], @opts).should 
+        fail # huh whats going on here
+        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2", "k2"], @opts).should  # k2 k2?
           eq( {"k" => "v", "k2" => "v2"} )
       end
+
+
     end
   end
+
+
 end
