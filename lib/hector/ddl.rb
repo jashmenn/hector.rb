@@ -5,17 +5,17 @@ import 'me.prettyprint.hector.api.ddl.ComparatorType'
 import 'me.prettyprint.hector.api.ddl.ColumnFamilyDefinition'
 import 'me.prettyprint.hector.api.ddl.ColumnType'
 import 'me.prettyprint.hector.api.ddl.KeyspaceDefinition'
+import 'me.prettyprint.cassandra.model.ExecutingKeyspace'
 
 class Hector
   module DDL
-    def keyspaces
+    def describe_keyspaces
       kss = @cluster.describeKeyspaces
-      kss.inject({}){|acc, ks|
-        acc.merge({ks.getName => 
-                    {:replication_factor => ks.getReplicationFactor,
-                      :strategy => ks.getStrategyClass,
-                      :strategy_options => ks.getStrategyOptions,
-                      :cf_defs => ks.getCfDefs}})}
+      kss.inject({}){|acc, ks| acc.merge(h_to_rb(ks))}
+    end
+
+    def describe_keyspace(name)
+      h_to_rb(@cluster.describeKeyspace(name))[name]
     end
 
     def add_keyspace(ks_def)
@@ -30,6 +30,7 @@ class Hector
 
     def make_column_family(keyspace, cf_def)
       name, comparator_type, column_type = cf_def[:name], cf_def[:comparator], cf_def[:type]
+      keyspace_name = keyspace.instance_of?(ExecutingKeyspace) ? keyspace.getKeyspaceName : keyspace
       hcf = if comparator_type
              comparator = if comparator_type.class == Class
                             comparator_type
@@ -45,9 +46,9 @@ class Hector
                             else raise "Unknown comparator type passed in column family definition"
                             end
                           end
-             HFactory.createColumnFamilyDefinition(keyspace, name, comparator)
+             HFactory.createColumnFamilyDefinition(keyspace_name, name, comparator)
            else
-             HFactory.createColumnFamilyDefinition(keyspace, name)
+             HFactory.createColumnFamilyDefinition(keyspace_name, name)
            end
       if column_type
         hcf.setColumnType( column_type == :super ? ColumnType::SUPER : ColumnType::STANDRD )
@@ -62,6 +63,22 @@ class Hector
 
     def drop_keyspace(keyspace)
       @cluster.dropKeyspace keyspace
+    end
+
+    def column_families
+      ks = describe_keyspace(@keyspace.getKeyspaceName)
+      ks[:cf_defs].inject({}) {|acc, d| 
+        de = h_to_rb(d)
+        acc.merge({de[:name] => de})}
+    end
+
+    def add_column_family(desc)
+      cf = make_column_family(@keyspace, desc)
+      @cluster.addColumnFamily(cf)
+    end
+
+    def drop_column_family(cf_name)
+      @cluster.dropColumnFamily(@keyspace.getKeyspaceName, cf_name)
     end
 
   end
