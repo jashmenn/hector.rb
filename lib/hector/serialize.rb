@@ -32,47 +32,31 @@ class Hector
     end
 
     def h_to_rb(s)
-      #pp [:h_to_rb, s, s.class, s.class == QueryResultImpl]
       case s
       when SuperRowsImpl
         s.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
-        #(to-clojure [s]
-        #            (map to-clojure (iterator-seq (.iterator s))))
       when SuperRowImpl
         {s.getKey => 
           s.getSuperSlice.getSuperColumns.inject({}) {|acc, x| 
             acc.merge(h_to_rb(x)) }}
-        #(to-clojure [s]
-        #            {(.getKey s) (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
       when HSuperColumnImpl
         {s.getName => 
           s.getColumns.inject({}) {|acc, x| 
             acc.merge(h_to_rb(x)) }}
-        #(to-clojure [s]
-        #            {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
       when RowsImpl
-        s.inject({}) {|acc, x| 
-          #pp x
-          acc.merge(h_to_rb(x)) 
-        }
+        s.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
       when RowImpl
         {s.getKey => h_to_rb(s.getColumnSlice)}
       when ColumnSliceImpl
-        s.getColumns.inject({}) {|acc, x| 
-          #pp x
-          acc.merge(h_to_rb(x)) 
-        }
+        s.getColumns.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
       when HColumnImpl
-        ## pp [s.getNameSerializer, s.getValueSerializer]
         {s.getName => s.getValue}
-        #(to-clojure [s]
-        #            {(.getName s) (.getValue s)})
       when Fixnum
         {:count => s}
       when QueryResultImpl
-        h_to_rb(s.get) # {:exec_us (.getExecutionTimeMicro s) #                                              :host (.getHostUsed s)})
+        h_to_rb(s.get) # {:exec_us (.getExecutionTimeMicro s) # :host (.getHostUsed s)})
       else
-        pp ["NONE", s.class, s]
+        raise "Unknown type #{s} (#{s.class}) for h_to_rb conversion"
       end
     end
   end
