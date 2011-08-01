@@ -154,6 +154,19 @@ class Hector
     execute_query(query)
   end
 
+  def get_super_columns(column_family, pk, sc, c, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    ks, ss, ns, vs = *seropts(options)
+    query = returning HFactory.createSubSliceQuery(@keyspace, ks, ss, ns, vs) do |q|
+      q.setColumnFamily(column_family)
+      q.setKey(pk)
+      q.setSuperColumn(sc)
+      q.setColumnNames(c.to_java(:object))
+    end
+    execute_query(query)
+  end
+
+
   private
 
   # e.g.

@@ -176,13 +176,12 @@ describe Hector do
       end
 
       it "should get super rows" do
-        # pp @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts)
         @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts).first.should 
            eq( {"row-key" => [{"SuperCol"  => {"k" => "v", "k2" => "v2"}},
                               {"SuperCol2" => {"k" => "v", "k2" => "v2"}}]} )
       end
 
-      pending "should get super columns" do
+      it "should get super columns" do
         @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2", "v2"], @opts).should 
           eq( {"k" => "v", "k2" => "v2"} )
       end
