@@ -60,10 +60,8 @@ class Hector
         {s.getName => s.getValue}
         #(to-clojure [s]
         #            {(.getName s) (.getValue s)})
-      # when Integer
-        # {:count s}
-        #(to-clojure [s]
-        #            {:count s})
+      when Fixnum
+        {:count => s}
       when QueryResultImpl
         h_to_rb(s.get) # {:exec_us (.getExecutionTimeMicro s) #                                              :host (.getHostUsed s)})
       else

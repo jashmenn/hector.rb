@@ -82,19 +82,44 @@ describe Hector do
         @client.put_row(@cf, "row-key", {"k" => "v"})
       end
 
-      it "should get entire rows" do
+      it "should get proper byte[]" do
         row = (@client.get_rows(@cf, ["row-key"], @opts))["row-key"]
         n_bytes = row.to_a.first.first
         v_bytes = row.to_a.first.last
         java.lang.String.new(n_bytes).should eq( "k" )
         java.lang.String.new(v_bytes).should eq( "v" )
-        # @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {1 => 1234}} )
       end
 
-      pending "should get individual columns" do
-        @client.get_columns(@cf, "row-key", [1], @opts).should eq( {1 => 1234} )
+      it "should get byte[] columns with bytes key" do
+        row = @client.get_columns(@cf, "row-key", [java.lang.String.new("k").getBytes], @opts)
+        n_bytes = row.to_a.first.first
+        v_bytes = row.to_a.first.last
+        java.lang.String.new(n_bytes).should eq( "k" )
+        java.lang.String.new(v_bytes).should eq( "v" )
+      end
+
+      it "should get byte[] columns with bytes key" do
+        opts = @opts.merge({:n_serializer => :string})
+        row = @client.get_columns(@cf, "row-key", ["k"], opts)
+        n       = row.to_a.first.first
+        v_bytes = row.to_a.first.last
+                                    n.should eq( "k" )
+        java.lang.String.new(v_bytes).should eq( "v" )
       end
     end
+
+
+    context "with a couple of columns" do
+      before(:each) do
+        @client.put_row(@cf, "row-key", {"k" => "v", "k2" => "v2"})
+      end
+
+      it "should count properly" do
+        @client.count_columns(@cf, "row-key").should eq({:count => 2})
+      end
+    end
+
+
 
 
   end

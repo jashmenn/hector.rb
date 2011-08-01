@@ -34,7 +34,7 @@ class Hector
     :n_serializer => :bytes,
     :v_serializer => :bytes,
     :s_serializer => :bytes, 
-    :count => 100,
+    :count => java.lang.Integer::MAX_VALUE,
     :start => nil,
     :finish => nil,
     :reversed => false
@@ -123,6 +123,23 @@ class Hector
 
   def execute_query(q)
     h_to_rb(q.execute)
+  end
+
+  # "Counts number of columns for pk in column family cf. The
+  # method is not O(1). It takes all the columns from disk to
+  # calculate the answer. The only benefit of the method is that
+  # you do not need to pull all the columns over Thrift interface
+  # to count them."
+  def count_columns(column_family, pk, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    ks, ss, ns, vs = *seropts(options)
+    
+    query = returning HFactory.createCountQuery(@keyspace, ks, ns) do |q|
+      q.setKey(pk)
+      q.setRange(options[:start].to_java, options[:finish].to_java, options[:count])
+      q.setColumnFamily(column_family)
+    end
+    execute_query(query)
   end
 
   private
