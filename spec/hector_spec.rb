@@ -1,5 +1,5 @@
 require 'spec_helper'
-describe Hector do
+describe "HectorClient" do
 
   def setup_keyspace_and_client(column_families)
     @cluster = Hector.cluster("Hector", "127.0.0.1:9160")
@@ -9,13 +9,13 @@ describe Hector do
     @client.keyspace = @ks_name
   end
 
-  def shutdown
+  def teardown_keyspace_and_client
     @client.drop_keyspace(@ks_name)
     @client.disconnect
   end
 
   after(:each) do
-    shutdown
+    teardown_keyspace_and_client
   end
 
   context "ColumnFamily 'a' (Standard with String comparator)" do

@@ -8,6 +8,16 @@ import 'me.prettyprint.hector.api.ddl.KeyspaceDefinition'
 
 class Hector
   module DDL
+    def keyspaces
+      kss = @cluster.describeKeyspaces
+      kss.inject({}){|acc, ks|
+        acc.merge({ks.getName => 
+                    {:replication_factor => ks.getReplicationFactor,
+                      :strategy => ks.getStrategyClass,
+                      :strategy_options => ks.getStrategyOptions,
+                      :cf_defs => ks.getCfDefs}})}
+    end
+
     def add_keyspace(ks_def)
       strategy = case ks_def[:strategy]
                    when :local;            "org.apache.cassandra.locator.LocalStrategy"

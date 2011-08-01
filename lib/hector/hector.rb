@@ -23,10 +23,6 @@ class Hector
     :n_serializer => :infer,
     :v_serializer => :infer,
     :s_serializer => :infer
-    #:count => 1000,
-    #:timestamp => nil,
-    #:consistency => Consistency::ONE,
-    #:ttl => nil
   }
 
   READ_DEFAULTS = {
@@ -38,7 +34,6 @@ class Hector
     :start => nil,
     :finish => nil,
     :reversed => false
-    #:consistency => Consistency::ONE,
   }
 
   attr_reader :keyspace, :cluster, :connection
