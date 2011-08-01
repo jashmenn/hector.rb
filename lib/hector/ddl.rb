@@ -40,7 +40,7 @@ class Hector
              HFactory.createColumnFamilyDefinition(keyspace, name)
            end
       if column_type
-        hcf.setColumnType( column_type == :super ? ColumnType.SUPER : ColumnType.STANDRD )
+        hcf.setColumnType( column_type == :super ? ColumnType::SUPER : ColumnType::STANDRD )
       end
       hcf
     end

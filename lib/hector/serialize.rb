@@ -34,13 +34,20 @@ class Hector
     def h_to_rb(s)
       #pp [:h_to_rb, s, s.class, s.class == QueryResultImpl]
       case s
-      #when SuperRowsImpl
+      when SuperRowsImpl
+        s.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
         #(to-clojure [s]
         #            (map to-clojure (iterator-seq (.iterator s))))
-      #when SuperRowImpl
+      when SuperRowImpl
+        {s.getKey => 
+          s.getSuperSlice.getSuperColumns.inject({}) {|acc, x| 
+            acc.merge(h_to_rb(x)) }}
         #(to-clojure [s]
         #            {(.getKey s) (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
-      #when HSuperColumnImpl
+      when HSuperColumnImpl
+        {s.getName => 
+          s.getColumns.inject({}) {|acc, x| 
+            acc.merge(h_to_rb(x)) }}
         #(to-clojure [s]
         #            {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
       when RowsImpl

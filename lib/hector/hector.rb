@@ -142,6 +142,18 @@ class Hector
     execute_query(query)
   end
 
+  def get_super_rows(column_family, pks, sc, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    _, ss, ns, vs = *seropts(options)
+    query = returning HFactory.createMultigetSuperSliceQuery(@keyspace, serializer(pks.first), ss, ns, vs) do |q|
+      q.setColumnFamily(column_family)
+      q.setKeys(pks.to_java(:object))
+      q.setColumnNames(sc.to_java(:object))
+      q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
+    end
+    execute_query(query)
+  end
+
   private
 
   # e.g.

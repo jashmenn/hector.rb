@@ -18,7 +18,7 @@ describe Hector do
     shutdown
   end
 
-  context "ColumnFamily 'a' (with String comparator)" do
+  context "ColumnFamily 'a' (Standard with String comparator)" do
 
     before(:each) do
       setup_keyspace_and_client([{:name => @cf="a"}])
@@ -75,7 +75,6 @@ describe Hector do
       end
     end
 
-
     context "defaults to byte array for name value serialization" do
       before(:each) do
         @opts = {:n_serializer => :bytes, :v_serializer => :bytes}
@@ -108,7 +107,6 @@ describe Hector do
       end
     end
 
-
     context "with a couple of columns" do
       before(:each) do
         @client.put_row(@cf, "row-key", {"k" => "v", "k2" => "v2"})
@@ -118,13 +116,9 @@ describe Hector do
         @client.count_columns(@cf, "row-key").should eq({:count => 2})
       end
     end
-
-
-
-
   end
 
-  context "ColumnFamily 'b' (with Long comparator)" do
+  context "ColumnFamily 'b' (Standard with Long comparator)" do
 
     before(:each) do
       setup_keyspace_and_client([{:name => @cf="b", :comparator => :long}])
@@ -164,70 +158,38 @@ describe Hector do
     end
   end
 
-# (deftest string-key-long-name-and-values-with-range
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf
-#                                                          :comparator :long}]})
-#     (put-row ks cf "row-key" {(long 1) (long 101)
-#                               (long 2) (long 102)
-#                               (long 3) (long 103)
-#                               (long 4) (long 104)})
-#     (is (= {"row-key" (sorted-map (long 2) (long 102)
-#                                  (long 3) (long 103))}
-#            (first (apply get-rows ks cf ["row-key"] [:n-serializer :long
-#                                                      :v-serializer :long
-#                                                      :start (long 2)
-#                                                      :end (long 3)]))))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
+  context "ColumnFamily 'c' SuperColumn" do
+    before(:each) do
+      setup_keyspace_and_client([{:name => @cf="c", :type => :super}])
+    end
 
-# (deftest defaults-to-byte-array-for-name-value-serialization
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf}]})
-#     (put-row ks cf "row-key" {"k" "v"})
-#     (let [first-row (get (first (get-rows ks cf ["row-key"])) "row-key")
-#           n-bytes (first (keys first-row))
-#           v-bytes (first (vals first-row))]
-#       (is (= "k"
-#              (String. n-bytes)))
-#       (is (= "v"
-#              (String. v-bytes))))
-#     (let [res (get-columns ks cf "row-key" [(.getBytes "k")])
-#           n-bytes (first (keys res))
-#           v-bytes (first (vals res))]
-#       (is (= "k"
-#              (String. n-bytes)))
-#       (is (= "v"
-#              (String. v-bytes))))
-#     (let [res (apply get-columns ks cf "row-key" ["k"] [:n-serializer :string])
-#           n (first (keys res))
-#           v-bytes (first (vals res))]
-#       (is (= "k" n))
-#       (is (= "v"
-#              (String. v-bytes))))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
+    context "with a string key & string value" do
+      before(:each) do
+        @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
+        @client.put_row(@cf, "row-key", 
+                        { "SuperCol"  => {"k" => "v", "k2" => "v2"},
+                          "SuperCol2" => {"k" => "v", "k2" => "v2"} })
+      end
 
-# (deftest counting
-#   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-#         cf "a"
-#         ks (keyspace *test-cluster* ks-name)]
-#     (ddl/add-keyspace *test-cluster* {:name ks-name
-#                                       :strategy :local
-#                                       :replication 1
-#                                       :column-families [{:name cf}]})
-#     (put-row ks cf "row-key" {"k" "v" "k2" "v2"})
-#     (is (= {:count 2}
-#            (count-columns ks "row-key" cf)))
-#     (ddl/drop-keyspace *test-cluster* ks-name)))
+      pending "should be able to detect a super column" do
+        # :super 
+      end
+
+      it "should get super rows" do
+        # pp @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts)
+        @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts).first.should 
+           eq( {"row-key" => [{"SuperCol"  => {"k" => "v", "k2" => "v2"}},
+                              {"SuperCol2" => {"k" => "v", "k2" => "v2"}}]} )
+      end
+
+      pending "should get super columns" do
+        @client.get_super_columns(@cf, "row-key", "SuperCol", ["k2", "v2"], @opts).should 
+          eq( {"k" => "v", "k2" => "v2"} )
+      end
+    end
+
+  end
+
 
 # (deftest supercolumn-with-string-key-name-and-value
 #   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
