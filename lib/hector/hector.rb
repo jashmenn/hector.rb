@@ -45,7 +45,7 @@ class Hector
   # Create a new Hector instance and open the connection.
   def initialize(keyspace_name, server_or_cluster = "127.0.0.1:9160", options = {})
     cluster_name = options[:cluster_name] || "Hector"
-    @cluster = server_or_cluster.kind_of?(String) ? self.class.cluster(cluster_name, server) : server_or_cluster
+    @cluster = server_or_cluster.kind_of?(String) ? self.class.cluster(cluster_name, server_or_cluster) : server_or_cluster
     self.keyspace = keyspace_name if keyspace_name
   end
 
