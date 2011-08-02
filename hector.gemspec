@@ -7,13 +7,13 @@ Gem::Specification.new do |s|
   s.version     = Hector::VERSION
   s.authors     = ["Nate Murray"]
   s.email       = ["nate@natemurray.com"]
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.homepage    = "http://www.xcombinator.com/"
+  s.summary     = %q{A Cassandra client for JRuby based on Hector}
+  s.description = %q{A Cassandra client for JRuby based on Hector.}
 
-  s.rubyforge_project = "hectorb"
+  s.rubyforge_project = "hector.rb"
 
-  s.files         = `git ls-files`.split("\n")
+  s.files         = `git ls-files`.split("\n") + `find vendor/jars -type f -name *.jar`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
