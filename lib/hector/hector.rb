@@ -105,6 +105,18 @@ class Hector
     end
   end
 
+  def get_range(column_family, start, finish, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    options = {:start => '', :finish => ''}.merge(options)
+    ks, ss, ns, vs = *seropts(options)
+    query = returning HFactory.createRangeSlicesQuery(@keyspace, serializer(start), ns, vs) do |q|
+      q.setColumnFamily(column_family)
+      q.setKeys(start.to_java, finish.to_java)
+      q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
+    end
+    execute_query(query)
+  end
+
   def delete_columns(column_family, pk, columns, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
     ks, _, ns, _ = *seropts(options)
