@@ -32,7 +32,6 @@ class Hector
     end
 
     def h_to_rb(s)
-      pp s
       case s
       when SuperRowsImpl
         s.inject(Hector::OrderedHash.new) {|acc, x| acc.merge(h_to_rb(x))}
@@ -45,10 +44,8 @@ class Hector
           s.getColumns.inject(Hector::OrderedHash.new) {|acc, x| 
             acc.merge(h_to_rb(x)) }}
       when RowsImpl
-        pp "RowsImpl #{s}"
         s.inject(Hector::OrderedHash.new) {|acc, x| acc.merge(h_to_rb(x))}
       when RowImpl
-        pp "RowImpl #{s}"
         {s.getKey => h_to_rb(s.getColumnSlice)}
       when ColumnSliceImpl
         s.getColumns.inject(Hector::OrderedHash.new) {|acc, x| acc.merge(h_to_rb(x))}

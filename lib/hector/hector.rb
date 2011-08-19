@@ -53,6 +53,14 @@ class Hector
     @keyspace = HFactory.createKeyspace(keyspace_name, @cluster)
   end
 
+  def clear_column_family!(cf)
+    # pp cf
+  end
+
+  def clear_keyspace!(keyspace_name)
+    describe_keyspace(keyspace_name)[:cf_defs].each{|cf| clear_column_family!(cf)}
+  end
+
   def disconnect
     HFactory.shutdownCluster(@cluster);
   end
@@ -109,7 +117,8 @@ class Hector
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     options = {:start => '', :finish => ''}.merge(options)
     ks, ss, ns, vs = *seropts(options)
-    query = returning HFactory.createRangeSlicesQuery(@keyspace, serializer(start), ns, vs) do |q|
+    ks = ks.class == TypeInferringSerializer ? serializer(start) : ks # TODO
+    query = returning HFactory.createRangeSlicesQuery(@keyspace, ks, ns, vs) do |q|
       q.setColumnFamily(column_family)
       q.setKeys(start.to_java, finish.to_java)
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
@@ -123,6 +132,17 @@ class Hector
     mut = returning HFactory.createMutator(@keyspace, ks) do |m|
       columns.map do |column|
         m.addDeletion pk, column_family, column, ns 
+      end 
+    end
+    mut.execute
+  end
+
+  def delete_rows(column_family, pks, options = {})
+    column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
+    ks, _, ns, _ = *seropts(options)
+    mut = returning HFactory.createMutator(@keyspace, ks) do |m|
+      pks.map do |k|
+        m.addDeletion k, column_family 
       end 
     end
     mut.execute
