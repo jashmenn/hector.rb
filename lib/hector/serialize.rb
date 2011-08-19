@@ -32,23 +32,26 @@ class Hector
     end
 
     def h_to_rb(s)
+      pp s
       case s
       when SuperRowsImpl
-        s.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
+        s.inject(Hector::OrderedHash.new) {|acc, x| acc.merge(h_to_rb(x))}
       when SuperRowImpl
         {s.getKey => 
-          s.getSuperSlice.getSuperColumns.inject({}) {|acc, x| 
+          s.getSuperSlice.getSuperColumns.inject(Hector::OrderedHash.new) {|acc, x| 
             acc.merge(h_to_rb(x)) }}
       when HSuperColumnImpl
         {s.getName => 
-          s.getColumns.inject({}) {|acc, x| 
+          s.getColumns.inject(Hector::OrderedHash.new) {|acc, x| 
             acc.merge(h_to_rb(x)) }}
       when RowsImpl
-        s.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
+        pp "RowsImpl #{s}"
+        s.inject(Hector::OrderedHash.new) {|acc, x| acc.merge(h_to_rb(x))}
       when RowImpl
+        pp "RowImpl #{s}"
         {s.getKey => h_to_rb(s.getColumnSlice)}
       when ColumnSliceImpl
-        s.getColumns.inject({}) {|acc, x| acc.merge(h_to_rb(x))}
+        s.getColumns.inject(Hector::OrderedHash.new) {|acc, x| acc.merge(h_to_rb(x))}
       when HColumnImpl
         {s.getName => s.getValue}
       when Fixnum
