@@ -137,6 +137,10 @@ describe "HectorClient" do
       it "should get individual columns" do
         @client.get_columns(@cf, 101, [1], @opts).should eq( {1 => 1234} )
       end
+
+      it "should get individual column values" do
+        @client.get_column(@cf, 101, 1, @opts).should eq( 1234 )
+      end
     end
 
     context "with several long keys & long values" do
@@ -179,6 +183,14 @@ describe "HectorClient" do
         @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts).first.should 
            eq( {"row-key" => [{"SuperCol"  => {"k" => "v", "k2" => "v2"}},
                               {"SuperCol2" => {"k" => "v", "k2" => "v2"}}]} )
+
+        #pp @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts)
+        #pp @client.get_super_rows(@cf, ["row-key"], ["SuperCol", "SuperCol2"], @opts.merge({:reversed => true}))
+      end
+
+      it "should get a super row" do
+        @client.get_super_row(@cf, "row-key", "SuperCol", @opts).should 
+        eq( {"k" => "v", "k2" => "v2"} )
       end
 
       it "should get super columns" do

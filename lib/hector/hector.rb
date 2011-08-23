@@ -16,7 +16,7 @@ class Hector
   class AccessError < StandardError #:nodoc:
   end
 
-  TYPE_INFERRING = TypeInferringSerializer.get
+  TYPE_INFERRING = Java::MePrettyprintCassandraSerializers::TypeInferringSerializer.get
 
   WRITE_DEFAULTS = {
     :k_serializer => :infer,
@@ -99,6 +99,10 @@ class Hector
     execute_query(query)
   end
 
+  def get_row(column_family, pk, options = {})
+    get_rows(column_family, [pk], options).values.first
+  end
+
   def get_columns(column_family, pk, columns, options = {}) 
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, _, ns, vs = *seropts(options)
@@ -111,6 +115,10 @@ class Hector
       execute_query(query)
     else
     end
+  end
+
+  def get_column(column_family, pk, column, options = {}) 
+    get_columns(column_family, pk, [column], options)[column]
   end
 
   def get_range(column_family, start, finish, options = {})
@@ -179,6 +187,10 @@ class Hector
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
     end
     execute_query(query)
+  end
+
+  def get_super_row(column_family, pk, sc, options = {})
+    get_super_rows(column_family, [pk], sc, options).values.first[sc]
   end
 
   def get_super_columns(column_family, pk, sc, c, options = {})
