@@ -207,7 +207,102 @@ describe "HectorClient" do
         @client.get_super_columns(@cf, "row-key", "SuperCol2", ["k", "k2"], @opts).should eq( {"k" => "v"} )
       end
 
+      context "when getting sub ranges" do
 
+        before(:each) do
+          @client.put_row(@cf, "row-key-1", 
+                          { "SuperColA" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                            "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                            "SuperColC" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} })
+
+          @client.put_row(@cf, "row-key-2", 
+                          { "SuperColA" => {"k1" => "aa", "k2" => "bb", "j3" => "cc"},
+                            "SuperColE" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                            "SuperColF" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} })
+        end
+
+        it "should only get the right super column count" do
+          r = @client.get_sub_range(@cf, '', '', "SuperColA", @opts)
+          r.should eql({"row-key-1" => {"k1"=>"v1", "k2"=>"v2", "k3"=>"v3"},
+                        "row-key-2" => {"k1" => "aa", "k2" => "bb", "j3" => "cc"},
+                        "row-key"   => {}})
+        end
+
+
+        it "should get column ranges with counts" do
+          opts = @opts.merge({:start => "k2", :count => 1, :row_count => 2})
+          r = @client.get_sub_range(@cf, '', '', "SuperColA", opts)
+          r.should eql({"row-key-1" => {"k2"=>"v2"},
+                        "row-key-2" => {"k2" => "bb"}})
+        end
+
+        it "should use the start and finish" do
+          opts = @opts.merge({:start => "k2", :count => 1, :row_count => 2})
+          r = @client.get_sub_range(@cf, 'row-key-2', '', "SuperColA", opts)
+          r.should eql({"row-key-2" => {"k2" => "bb"},
+                         "row-key"  => {}})
+        end
+
+        pending "should set the column names" do
+          opts = @opts.merge({:columns => ["k2"], :start => nil, :finish => nil})
+          r = @client.get_sub_range(@cf, '', '', "SuperColA", opts)
+          pp r # todo, not sure how setColumnNames is supposed to work
+        end
+
+      end
+
+      context "when getting super ranges" do
+
+        before(:each) do
+          @client.put_row(@cf, "row-key-1", 
+                          { "SuperColA" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                            "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                            "SuperColC" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} })
+
+          @client.put_row(@cf, "row-key-2", 
+                          { "SuperColA" => {"k1" => "aa", "k2" => "bb", "j3" => "cc"},
+                            "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                            "SuperColF" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} })
+        end
+
+        it "should only get the whole enchilada" do
+          r = @client.get_super_range(@cf, '', '', @opts)
+          r.keys.size.should eql(3)
+          # this is all of every row, in case you're wondering
+        end
+
+        it "should get specific keys" do
+          r = @client.get_super_range(@cf, 'row-key-1', 'row-key-2', @opts)
+          r.keys.size.should eql(2)
+        end
+
+        it "should get super column range" do
+          opts = @opts.merge({:start => "SuperColB"})
+          r = @client.get_super_range(@cf, '', '', opts)
+          r.should eql({"row-key-1" => 
+                         { "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                           "SuperColC" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} },
+                        "row-key-2" =>
+                         { "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"},
+                           "SuperColF" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} },
+                        "row-key" => {} })
+        end
+
+        it "should limit rows and columns" do
+          opts = @opts.merge({:start => "SuperColB", :count => 1, :row_count => 2})
+          r = @client.get_super_range(@cf, '', '', opts)
+          r.should eql({"row-key-1" => 
+                         { "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} },
+                        "row-key-2" =>
+                         { "SuperColB" => {"k1" => "v1", "k2" => "v2", "k3" => "v3"} }})
+        end
+
+        pending "should get specific columns" do
+          opts = @opts.merge({:columns => ["k1", "k2"]})
+          r = @client.get_super_range(@cf, '', '', opts)
+        end
+
+     end
     end
   end
 

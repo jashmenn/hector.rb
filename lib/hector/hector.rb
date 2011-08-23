@@ -134,6 +134,43 @@ class Hector
     execute_query(query)
   end
 
+  # A query for the call get_range_slices for subcolumns of supercolumns
+  # Get a range of subcolumns for many rows matching a single super column
+  # start/finish are the row keys
+  # :start, :finish, :reverse, :range are for column names
+  def get_sub_range(column_family, start, finish, sc, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    options = {:start => '', :finish => ''}.merge(options)
+    ks, ss, ns, vs = *seropts(options)
+    ks = ks.class == TypeInferringSerializer ? serializer(start) : ks # TODO
+    query = returning HFactory.createRangeSubSlicesQuery(@keyspace, ks, ss, ns, vs) do |q|
+      q.setColumnFamily(column_family)
+      q.setKeys(start.to_java, finish.to_java) # row keys
+
+      q.setSuperColumn(sc) # pluck the columns from this super column
+      q.setColumnNames(options[:columns].to_java) if options[:columns] # TODO I don't know how this works
+      q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count]) # column range
+      q.setRowCount(options[:row_count]) if options[:row_count]
+    end
+    execute_query(query)
+  end
+
+  def get_super_range(column_family, start, finish, options = {})
+    column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
+    options = {:start => '', :finish => ''}.merge(options)
+    ks, ss, ns, vs = *seropts(options)
+    ks = ks.class == TypeInferringSerializer ? serializer(start) : ks # TODO
+    query = returning HFactory.createRangeSuperSlicesQuery(@keyspace, ks, ss, ns, vs) do |q|
+      q.setColumnFamily(column_family)
+      q.setColumnNames(options[:columns].to_java) if options[:columns] # TODO I don't know how this works
+      q.setKeys(start.to_java, finish.to_java) # row keys
+      q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count]) # super column range
+      q.setRowCount(options[:row_count]) if options[:row_count]
+    end
+    execute_query(query)
+  end
+
+
   def delete_columns(column_family, pk, columns, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
     ks, _, ns, _ = *seropts(options)
