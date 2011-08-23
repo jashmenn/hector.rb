@@ -28,28 +28,32 @@ class Hector
       @cluster.addKeyspace(make_keyspace_definition(ks_def[:name], strategy, replication, ks_def[:column_families]))
     end
 
+    def get_comparator_type(comparator_type)
+      if comparator_type.class == Class
+        comparator_type
+      else
+        case comparator_type
+        when :ascii         then ComparatorType.ASCIITYPE
+        when :byte          then ComparatorType.BYTESTYPE
+        when :integer       then ComparatorType.INTEGERTYPE
+        when :lexical_uuid  then ComparatorType.LEXICALUUIDTYPE
+        when :long          then ComparatorType.LONGTYPE
+        when :time_uuid     then ComparatorType.TIMEUUIDTYPE
+        when :utf8          then ComparatorType.UTF8TYPE
+        else raise "Unknown comparator type #{comparator_type}"
+        end
+      end
+    end
+
     def make_column_family(keyspace, cf_def)
-      name, comparator_type, column_type = cf_def[:name], cf_def[:comparator], cf_def[:type]
+      name, comparator_type, subcomparator_type, column_type = cf_def[:name], cf_def[:comparator], cf_def[:subcomparator], cf_def[:type]
       keyspace_name = keyspace.instance_of?(ExecutingKeyspace) ? keyspace.getKeyspaceName : keyspace
-      hcf = if comparator_type
-             comparator = if comparator_type.class == Class
-                            comparator_type
-                          else
-                            case comparator_type
-                            when :ascii         then ComparatorType.ASCIITYPE
-                            when :byte          then ComparatorType.BYTESTYPE
-                            when :integer       then ComparatorType.INTEGERTYPE
-                            when :lexical_uuid  then ComparatorType.LEXICALUUIDTYPE
-                            when :long          then ComparatorType.LONGTYPE
-                            when :time_uuid     then ComparatorType.TIMEUUIDTYPE
-                            when :utf8          then ComparatorType.UTF8TYPE
-                            else raise "Unknown comparator type passed in column family definition"
-                            end
-                          end
-             HFactory.createColumnFamilyDefinition(keyspace_name, name, comparator)
-           else
-             HFactory.createColumnFamilyDefinition(keyspace_name, name)
-           end
+
+      hcf = returning(HFactory.createColumnFamilyDefinition(keyspace_name, name)) do |cfd|
+        cfd.setComparatorType(   get_comparator_type(   comparator_type)) if comparator_type
+        cfd.setSubComparatorType(get_comparator_type(subcomparator_type)) if subcomparator_type
+      end
+
       if column_type
         hcf.setColumnType( column_type == :super ? ColumnType::SUPER : ColumnType::STANDRD )
       end
