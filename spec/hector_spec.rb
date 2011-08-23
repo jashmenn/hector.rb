@@ -34,6 +34,10 @@ describe "HectorClient" do
         @client.get_rows(@cf, ["row-key"], @opts).should eq( {"row-key" => {'k' => 'v'}} )
       end
 
+      it "should get a single row" do
+        @client.get_row(@cf, "row-key", @opts).should eq( {'k' => 'v'} )
+      end
+
       it "should get individual columns" do
         @client.get_columns(@cf, "row-key", ["k"], @opts).should eq( {'k' => 'v'} )
       end

@@ -118,7 +118,8 @@ class Hector
   end
 
   def get_column(column_family, pk, column, options = {}) 
-    get_columns(column_family, pk, [column], options)[column]
+    r = get_columns(column_family, pk, [column], options)
+    r ? r[column] : r
   end
 
   def get_range(column_family, start, finish, options = {})
@@ -227,7 +228,9 @@ class Hector
   end
 
   def get_super_row(column_family, pk, sc, options = {})
-    get_super_rows(column_family, [pk], sc, options).values.first[sc]
+    pp [column_family, pk, sc]
+    r = get_super_rows(column_family, [pk], sc, options)
+    r.values.first[sc]
   end
 
   def get_super_columns(column_family, pk, sc, c, options = {})

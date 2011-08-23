@@ -65,6 +65,7 @@ class Hector
         OH.new.merge({:name => s.getName,
                 :comparator => parse_comparator(s.getComparatorType),
                 :type => parse_column_type(s.getColumnType)})
+      when nil then nil
       else
         raise "Unknown type #{s} (#{s.class}) for h_to_rb conversion"
       end
