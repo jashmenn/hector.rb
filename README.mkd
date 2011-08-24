@@ -4,23 +4,25 @@ A Cassandra client for JRuby, backed by Hector.
 
 ## Usage
 
-    cluster = Hector.cluster("Hector", "127.0.0.1:9160")
-    ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
-    client = Hector.new(nil, @cluster, :retries => 2, :exception_classes => [])
-    column_families = [{:name =>"a"}, {:name => "b", :type => :super}]
-    client.add_keyspace({:name => ks_name, :strategy => :local, :replication => 1, :column_families => column_families}) 
-    client.keyspace = ks_name
+```ruby
+cluster = Hector.cluster("Hector", "127.0.0.1:9160")
+ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+client = Hector.new(nil, @cluster, :retries => 2, :exception_classes => [])
+column_families = [{:name =>"a"}, {:name => "b", :type => :super}]
+client.add_keyspace({:name => ks_name, :strategy => :local, :replication => 1, :column_families => column_families}) 
+client.keyspace = ks_name
 
-    sopts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
-    client.put_row("a", "row-key", {"k" => "v"})
-    client.get_rows("a", ["row-key"], sopts) # => {"row-key" => {'k' => 'v'}}
-    client.get_columns("a", "row-key", ["k"], sopts) # => {'k' => 'v'}
+sopts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
+client.put_row("a", "row-key", {"k" => "v"})
+client.get_rows("a", ["row-key"], sopts) # => {"row-key" => {'k' => 'v'}}
+client.get_columns("a", "row-key", ["k"], sopts) # => {'k' => 'v'}
 
-    
-    client.put_row("b", "row-key", 
-                   { "SuperCol"  => {"k" => "v", "k2" => "v2"},
-                     "SuperCol2" => {"k" => "v", "k2" => "v2"} })
-    client.get_super_columns("b", "row-key", "SuperCol", ["k2"], sopts) # => {"k2" => "v2"}
+
+client.put_row("b", "row-key", 
+               { "SuperCol"  => {"k" => "v", "k2" => "v2"},
+                 "SuperCol2" => {"k" => "v", "k2" => "v2"} })
+client.get_super_columns("b", "row-key", "SuperCol", ["k2"], sopts) # => {"k2" => "v2"}
+```
 
 For more examples, see [the tests](https://github.com/jashmenn/hector.rb/blob/master/spec/hector_spec.rb).
 
