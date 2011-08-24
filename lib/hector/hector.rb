@@ -228,7 +228,6 @@ class Hector
   end
 
   def get_super_row(column_family, pk, sc, options = {})
-    pp [column_family, pk, sc]
     r = get_super_rows(column_family, [pk], sc, options)
     r.values.first[sc]
   end
