@@ -49,7 +49,7 @@ class Hector
       name, comparator_type, subcomparator_type, column_type = cf_def[:name], cf_def[:comparator], cf_def[:subcomparator], cf_def[:type]
       keyspace_name = keyspace.instance_of?(ExecutingKeyspace) ? keyspace.getKeyspaceName : keyspace
 
-      hcf = returning(HFactory.createColumnFamilyDefinition(keyspace_name, name)) do |cfd|
+      hcf = HFactory.createColumnFamilyDefinition(keyspace_name, name).tap do |cfd|
         cfd.setComparatorType(   get_comparator_type(   comparator_type)) if comparator_type
         cfd.setSubComparatorType(get_comparator_type(subcomparator_type)) if subcomparator_type
       end

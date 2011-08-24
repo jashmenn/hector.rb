@@ -91,7 +91,7 @@ class Hector
   def get_rows(column_family, pks, options = {})
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, ss, ns, vs = *seropts(options)
-    query = returning HFactory.createMultigetSliceQuery(@keyspace, serializer(pks.first), ns, vs) do |q|
+    query = HFactory.createMultigetSliceQuery(@keyspace, serializer(pks.first), ns, vs).tap do |q|
       q.setColumnFamily(column_family)
       q.setKeys(pks.to_java(:object))
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
@@ -107,7 +107,7 @@ class Hector
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, _, ns, vs = *seropts(options)
     if columns.size < 2
-      query = returning HFactory.createColumnQuery(@keyspace, ks, ns, vs) do |q|
+      query = HFactory.createColumnQuery(@keyspace, ks, ns, vs).tap do |q|
         q.setColumnFamily(column_family)
         q.setKey(pk)
         q.setName(columns.first)
@@ -127,7 +127,7 @@ class Hector
     options = {:start => '', :finish => ''}.merge(options)
     ks, ss, ns, vs = *seropts(options)
     ks = ks.class == TypeInferringSerializer ? serializer(start) : ks # TODO
-    query = returning HFactory.createRangeSlicesQuery(@keyspace, ks, ns, vs) do |q|
+    query = HFactory.createRangeSlicesQuery(@keyspace, ks, ns, vs).tap do |q|
       q.setColumnFamily(column_family)
       q.setKeys(start.to_java, finish.to_java)
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:reversed], options[:count])
@@ -144,7 +144,7 @@ class Hector
     options = {:start => '', :finish => ''}.merge(options)
     ks, ss, ns, vs = *seropts(options)
     ks = ks.class == TypeInferringSerializer ? serializer(start) : ks # TODO
-    query = returning HFactory.createRangeSubSlicesQuery(@keyspace, ks, ss, ns, vs) do |q|
+    query = HFactory.createRangeSubSlicesQuery(@keyspace, ks, ss, ns, vs).tap do |q|
       q.setColumnFamily(column_family)
       q.setKeys(start.to_java, finish.to_java) # row keys
 
@@ -161,7 +161,7 @@ class Hector
     options = {:start => '', :finish => ''}.merge(options)
     ks, ss, ns, vs = *seropts(options)
     ks = ks.class == TypeInferringSerializer ? serializer(start) : ks # TODO
-    query = returning HFactory.createRangeSuperSlicesQuery(@keyspace, ks, ss, ns, vs) do |q|
+    query = HFactory.createRangeSuperSlicesQuery(@keyspace, ks, ss, ns, vs).tap do |q|
       q.setColumnFamily(column_family)
       q.setColumnNames(options[:columns].to_java) if options[:columns] # TODO I don't know how this works
       q.setKeys(start.to_java, finish.to_java) # row keys
@@ -175,7 +175,7 @@ class Hector
   def delete_columns(column_family, pk, columns, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
     ks, _, ns, _ = *seropts(options)
-    mut = returning HFactory.createMutator(@keyspace, ks) do |m|
+    mut = HFactory.createMutator(@keyspace, ks).tap do |m|
       columns.map do |column|
         m.addDeletion pk, column_family, column, ns 
       end 
@@ -186,7 +186,7 @@ class Hector
   def delete_rows(column_family, pks, options = {})
     column_family, options = column_family.to_s, WRITE_DEFAULTS.merge(options)
     ks, _, ns, _ = *seropts(options)
-    mut = returning HFactory.createMutator(@keyspace, ks) do |m|
+    mut = HFactory.createMutator(@keyspace, ks).tap do |m|
       pks.map do |k|
         m.addDeletion k, column_family 
       end 
@@ -207,7 +207,7 @@ class Hector
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, ss, ns, vs = *seropts(options)
     
-    query = returning HFactory.createCountQuery(@keyspace, ks, ns) do |q|
+    query = HFactory.createCountQuery(@keyspace, ks, ns).tap do |q|
       q.setKey(pk)
       q.setRange(options[:start].to_java, options[:finish].to_java, options[:count])
       q.setColumnFamily(column_family)
@@ -218,7 +218,7 @@ class Hector
   def get_super_rows(column_family, pks, sc, options = {})
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     _, ss, ns, vs = *seropts(options)
-    query = returning HFactory.createMultigetSuperSliceQuery(@keyspace, serializer(pks.first), ss, ns, vs) do |q|
+    query = HFactory.createMultigetSuperSliceQuery(@keyspace, serializer(pks.first), ss, ns, vs).tap do |q|
       q.setColumnFamily(column_family)
       q.setKeys(pks.to_java(:object))
       q.setColumnNames(sc.to_java(:object))
@@ -235,7 +235,7 @@ class Hector
   def get_super_columns(column_family, pk, sc, c, options = {})
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, ss, ns, vs = *seropts(options)
-    query = returning HFactory.createSubSliceQuery(@keyspace, ks, ss, ns, vs) do |q|
+    query = HFactory.createSubSliceQuery(@keyspace, ks, ss, ns, vs).tap do |q|
       q.setColumnFamily(column_family)
       q.setKey(pk)
       q.setSuperColumn(sc)
@@ -247,7 +247,7 @@ class Hector
   def delete_super_columns(column_family, columns, options = {})
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, ss, ns, vs = *seropts(options)
-    mut = returning HFactory.createMutator(@keyspace, ks) do |m|
+    mut = HFactory.createMutator(@keyspace, ks).tap do |m|
       columns.map do |k, nv|
         nv.map do |sc_name, v|
           column = create_column(sc_name, v.inject({}){|acc,e| acc.merge({e => e})}, options) 
