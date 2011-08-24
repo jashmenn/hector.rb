@@ -1,11 +1,11 @@
-import 'me.prettyprint.hector.api.factory.HFactory'
-import 'me.prettyprint.hector.api.Cluster'
-import 'me.prettyprint.cassandra.service.ThriftCfDef'
-import 'me.prettyprint.hector.api.ddl.ComparatorType'
-import 'me.prettyprint.hector.api.ddl.ColumnFamilyDefinition'
-import 'me.prettyprint.hector.api.ddl.ColumnType'
-import 'me.prettyprint.hector.api.ddl.KeyspaceDefinition'
-import 'me.prettyprint.cassandra.model.ExecutingKeyspace'
+java_import 'me.prettyprint.hector.api.factory.HFactory'
+java_import 'me.prettyprint.hector.api.Cluster'
+java_import 'me.prettyprint.cassandra.service.ThriftCfDef'
+java_import 'me.prettyprint.hector.api.ddl.ComparatorType'
+java_import 'me.prettyprint.hector.api.ddl.ColumnFamilyDefinition'
+java_import 'me.prettyprint.hector.api.ddl.ColumnType'
+java_import 'me.prettyprint.hector.api.ddl.KeyspaceDefinition'
+java_import 'me.prettyprint.cassandra.model.ExecutingKeyspace'
 
 class Hector
   module DDL

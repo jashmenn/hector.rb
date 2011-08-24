@@ -1,9 +1,9 @@
-import 'me.prettyprint.hector.api.factory.HFactory'
-import 'me.prettyprint.hector.api.mutation.Mutator'
-import 'me.prettyprint.hector.api.Cluster'
-import 'me.prettyprint.hector.api.query.Query'
-import 'me.prettyprint.cassandra.service.CassandraHostConfigurator'
-import 'me.prettyprint.cassandra.serializers.TypeInferringSerializer'
+java_import 'me.prettyprint.hector.api.factory.HFactory'
+java_import 'me.prettyprint.hector.api.mutation.Mutator'
+java_import 'me.prettyprint.hector.api.Cluster'
+java_import 'me.prettyprint.hector.api.query.Query'
+java_import 'me.prettyprint.cassandra.service.CassandraHostConfigurator'
+java_import 'me.prettyprint.cassandra.serializers.TypeInferringSerializer'
 
 =begin rdoc
 =end
