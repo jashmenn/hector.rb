@@ -65,16 +65,16 @@ class Hector
     HFactory.shutdownCluster(@cluster);
   end
 
-  # note, how we're giving every column the same seralizer
-  # here. TODO have more advanced options where we can specify
-  # per-name column serialization
   def create_column(n, v, options = {})
     ks, ss, ns, vs = *seropts(options)
+    name_sers = options[:per_column_serializers] || {}
+    supr_sers = options[:per_supercolumn_serializers] || {}
+    valu_sers = options[:per_value_serializers] || {}
     if v.kind_of?(Hash)
       cols = v.collect {|name,value| create_column(name, value, options)}
-      HFactory.createSuperColumn(n, cols, ss, ns, vs)
+      HFactory.createSuperColumn(n, cols, supr_sers[n] || ss, name_sers[n] || ns, valu_sers[n] || vs)
     else
-      HFactory.createColumn(n, v, ns, vs)
+      HFactory.createColumn(n, v, name_sers[n] || ns, valu_sers[n] || vs)
     end
   end
 
@@ -106,15 +106,16 @@ class Hector
   def get_columns(column_family, pk, columns, options = {}) 
     column_family, options = column_family.to_s, READ_DEFAULTS.merge(options)
     ks, _, ns, vs = *seropts(options)
-    if columns.size < 2
-      query = HFactory.createColumnQuery(@keyspace, ks, ns, vs).tap do |q|
-        q.setColumnFamily(column_family)
-        q.setKey(pk)
-        q.setName(columns.first)
-      end
-      execute_query(query)
-    else
+    ks = ks.class == TypeInferringSerializer ? serializer(pk) : ks
+    ns = ns.class == TypeInferringSerializer ? serializer(columns.first) : ns
+    query = HFactory.createMultigetSliceQuery(@keyspace, serializer(pk), serializer(columns.first), vs).tap do |q|
+      keys = [pk]
+      q.setColumnFamily(column_family)
+      q.setKeys(keys.to_java(:object))
+      q.setColumnNames(*columns)
     end
+    r = execute_query(query)
+    r ? r[pk] : r
   end
 
   def get_column(column_family, pk, column, options = {}) 
