@@ -46,16 +46,19 @@ class Hector
     end
 
     def make_column_family(keyspace, cf_def)
-      name, comparator_type, subcomparator_type, column_type = cf_def[:name], cf_def[:comparator], cf_def[:subcomparator], cf_def[:type]
+      name, key_type, comparator_type, subcomparator_type, column_type = cf_def[:name], cf_def[:key], cf_def[:comparator], cf_def[:subcomparator], cf_def[:type]
       keyspace_name = keyspace.instance_of?(ExecutingKeyspace) ? keyspace.getKeyspaceName : keyspace
 
       hcf = HFactory.createColumnFamilyDefinition(keyspace_name, name).tap do |cfd|
+        cfd.setDefaultValidationClass( get_comparator_type( column_type).getClassName() ) if column_type
+        cfd.setKeyValidationClass( get_comparator_type(key_type).getClassName() )         if key_type
+
         cfd.setComparatorType(   get_comparator_type(   comparator_type)) if comparator_type
         cfd.setSubComparatorType(get_comparator_type(subcomparator_type)) if subcomparator_type
       end
 
       if column_type
-        hcf.setColumnType( column_type == :super ? ColumnType::SUPER : ColumnType::STANDRD )
+        hcf.setColumnType( column_type == :super ? ColumnType::SUPER : ColumnType::STANDARD )
       end
       hcf
     end
